@@ -5,6 +5,9 @@ start:
 install:
 	composer install
 
+lint:
+	composer exec --verbose phpcs -- --standard=PSR12 public
+
 test:
 	composer exec --verbose phpunit tests
 
