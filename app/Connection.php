@@ -8,7 +8,13 @@ final class Connection
     
     public function connect()
     {
-        $params = parse_ini_file('database.ini');
+
+        if (getenv('DATABASE_URL')) {
+            $params = parse_url(getenv('DATABASE_URL'));
+        } else {
+            $params = parse_ini_file('database.ini');
+        }
+        
         if ($params === false) {
             throw new \Exception("Error reading database configuration file");
         }
