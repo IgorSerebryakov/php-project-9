@@ -15,7 +15,6 @@ try {
 
 
 
-// print_r(parse_url('postgres://xen:J6jwrmQ7rpFX0ivayzuUhW4c8ZbR7XM1@dpg-cp2entv79t8c73fsjoag-a.oregon-postgres.render.com/urls_gacn'));
 
 
 

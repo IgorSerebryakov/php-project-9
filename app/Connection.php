@@ -8,30 +8,31 @@ final class Connection
     
     public function connect()
     {
+        $params = [];
 
-//        if (getenv('DATABASE_URL')) {
-//            $dbUrl = parse_url(getenv('DATABASE_URL'));
-//            $params['host'] = $dbUrl['host'];
-//        } 
+        if (getenv('DATABASE_URL')) {
+            $dbUrl = parse_url(getenv('DATABASE_URL'));
+            $params['host'] = $dbUrl['host'];
+            $params['port'] = isset($dbUrl['port']) ?: 5432;
+            $params['database'] = ltrim($dbUrl['path'], '/');
+            $params['user'] = $dbUrl['user'];
+            $params['pass'] = $dbUrl['pass'];
+        } else {
+            $params = parse_ini_file('database.ini');
+        }
         
-        
-        $params = parse_ini_file('database.ini');
         if ($params === false) {
             throw new \Exception("Error reading database configuration file");
         }
-       
         
-        // postgres://xen:J6jwrmQ7rpFX0ivayzuUhW4c8ZbR7XM1@dpg-cp2entv79t8c73fsjoag-a.oregon-postgres.render.com/urls_gacn
-//        $conStr = sprintf(
-//            "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
-//            $params['host'],
-//            $params['port'],
-//            $params['database'],
-//            $params['user'],
-//            $params['pass']
-//        );
-        
-        $conStr = 'pgsql:host=dpg-cp2entv79t8c73fsjoag-a.oregon-postgres.render.com;port=5432;dbname=urls_gacn;user=xen;password=J6jwrmQ7rpFX0ivayzuUhW4c8ZbR7XM1';
+        $conStr = sprintf(
+            "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
+            $params['host'],
+            $params['port'],
+            $params['database'],
+            $params['user'],
+            $params['pass']
+        );
         
         $pdo = new \PDO($conStr);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
