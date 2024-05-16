@@ -31,7 +31,7 @@ final class Connection
 //            $params['pass']
 //        );
         
-        $conStr = 'postgres://xen:J6jwrmQ7rpFX0ivayzuUhW4c8ZbR7XM1@dpg-cp2entv79t8c73fsjoag-a.oregon-postgres.render.com/urls_gacn';
+        $conStr = 'pgsql:host=dpg-cp2entv79t8c73fsjoag-a.oregon-postgres.render.com;port=5432;dbname=urls_gacn;user=xen;password=J6jwrmQ7rpFX0ivayzuUhW4c8ZbR7XM1';
         
         $pdo = new \PDO($conStr);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
