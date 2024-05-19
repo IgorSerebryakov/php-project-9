@@ -10,7 +10,7 @@ class Database
     {
         $this->pdo = $pdo;
     }
-    public function insertUrl($name, $created_at)
+    public function save($name, $created_at)
     {
         $sql = 'INSERT INTO urls (name, created_at) VALUES (:name, :created_at)';
         $stmt = $this->pdo->prepare($sql);

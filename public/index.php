@@ -35,21 +35,44 @@ $router = $app->getRouteCollector()->getRouteParser();
 $app->addErrorMiddleware(true, true, true);
 $app->add(MethodOverrideMiddleware::class);
 
+$database = new Database($pdo);
+
 $app->get('/', function ($request, $response) {
-    return $this->get('renderer')->render($response, 'index.phtml');    
+    $params = [
+        'errors' => []
+    ];
+    return $this->get('renderer')->render($response, 'index.phtml', $params);    
 });
 
-$app->post('/urls', function ($request, $response) use ($pdo) {
-    $url = $request->getParsedBodyParam('url');
-    $dateOfCreation = date("Y-m-d H:i:s");
+$app->post('/urls', function ($request, $response) use ($database) {
+    $urlParams = $request->getParsedBodyParam('url');
+    $validator = new \Valitron\Validator($urlParams);
+    $validator->rules([
+        'required' => [
+            ['name']
+        ],
+        'lengthMax' => [
+            ['name', 255]
+        ],
+        'url' => [
+            ['name']
+        ]
+    ]);
     
-    $db = new Database($pdo);
-    $db->insertUrl($url['name'], $dateOfCreation);
+    if ($validator->validate()) {
+        $database->save($urlParams['name'], date("Y-m-d H:i:s"));
+        $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+        return $response;
+    } else {
+        $errors = $validator->errors();
+        $params = [
+            'errors' => $errors['name'],
+            'name' => $urlParams['name']
+        ];
+        dump($errors['name']);
+    }
     
-    $html = var_export($url['name'], true);
-    $response->getBody()->write($html);
-    
-    return $response;
+    return $this->get('renderer')->render($response, 'index.phtml', $params);
 });
 
 $app->run();
