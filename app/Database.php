@@ -20,4 +20,14 @@ class Database
             'created_at' => $created_at
         ]);
     }
+    
+    public function find($id)
+    {
+        $sql = 'SELECT id, name, created_at FROM urls WHERE id = :id';
+        $stmt = $this->pdo->prepare($sql);
+        
+        $stmt->execute([$id]);
+        
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
 }

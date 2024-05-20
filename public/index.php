@@ -69,10 +69,20 @@ $app->post('/urls', function ($request, $response) use ($database) {
             'errors' => $errors['name'],
             'name' => $urlParams['name']
         ];
-        dump($errors['name']);
     }
     
     return $this->get('renderer')->render($response, 'index.phtml', $params);
+});
+
+$app->get('/urls/{id}', function ($request, $response, $args) use ($database, $router) {
+    $id = $args['id'];
+    $dataUrl = $database->find($id);
+    $params = [
+        'data' => $dataUrl
+    ];
+    
+    dump($dataUrl);
+    return $this->get('renderer')->render($response, 'show.phtml', $params);
 });
 
 $app->run();
