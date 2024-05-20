@@ -81,7 +81,6 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($database, $r
         'data' => $dataUrl
     ];
     
-    dump($dataUrl);
     return $this->get('renderer')->render($response, 'show.phtml', $params);
 });
 
