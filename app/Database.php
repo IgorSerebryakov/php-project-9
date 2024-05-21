@@ -57,9 +57,7 @@ class Database
     public function all()
     {
         $sql = 'SELECT * FROM urls ORDER BY id DESC';
-        $stmt = $this->pdo->prepare($sql);
-        
-        $stmt->execute([]);
+        $stmt = $this->pdo->query($sql);
         
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }

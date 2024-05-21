@@ -41,7 +41,7 @@ $app->get('/', function ($request, $response) {
     $params = [
         'errors' => []
     ];
-    return $this->get('renderer')->render($response, 'index.phtml', $params);    
+    return $this->get('renderer')->render($response, 'new.phtml', $params);    
 });
 
 $app->post('/urls', function ($request, $response) use ($database, $router) {
@@ -80,7 +80,7 @@ $app->post('/urls', function ($request, $response) use ($database, $router) {
         ];
     }
     
-    return $this->get('renderer')->render($response, 'index.phtml', $params);
+    return $this->get('renderer')->render($response, 'new.phtml', $params);
 });
 
 $app->get('/urls/{id}', function ($request, $response, $args) use ($database, $router) {
@@ -99,8 +99,12 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($database, $r
 
 $app->get('/urls', function ($request, $response) use ($database, $router) {
     $urls = $database->all();
-    dump($urls);
-    return $response;
+    $params = [
+        'urls' => $urls
+    ];
+    
+    
+    return $this->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('urls');
 
 $app->run();
