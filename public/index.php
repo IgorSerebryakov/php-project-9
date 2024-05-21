@@ -103,7 +103,6 @@ $app->get('/urls', function ($request, $response) use ($database, $router) {
         'urls' => $urls
     ];
     
-    
     return $this->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('urls');
 
