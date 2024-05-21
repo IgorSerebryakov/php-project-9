@@ -38,26 +38,28 @@
     </nav>
 </header>
 
+<div class="alert alert-success" role="alert"><?= htmlspecialchars($flash['success'][0]); ?></div>
+
 <main class="flex-grow-1">
-            <div class="container-lg mt-3">
-                <h1>Сайт: <?= htmlspecialchars($data['name']); ?></h1>
-                <table class="table table-bordered table-hover text-nowrap" data-test="url">
-                    <tbody>
-                    <tr>
-                        <td>ID</td>
-                        <td><?= htmlspecialchars($data['id']) ?></td>
-                    </tr>
-                    <tr>
-                        <td>Имя</td>
-                        <td><?= htmlspecialchars($data['name']) ?></td>
-                    </tr>
-                    <tr>
-                        <td>Дата создания</td>
-                        <td><?= htmlspecialchars($data['created_at']) ?></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+    <div class="container-lg mt-3">
+        <h1>Сайт: <?= htmlspecialchars($data['name']); ?></h1>
+        <table class="table table-bordered table-hover text-nowrap" data-test="url">
+            <tbody>
+            <tr>
+                <td>ID</td>
+                <td><?= htmlspecialchars($data['id']) ?></td>
+            </tr>
+            <tr>
+                <td>Имя</td>
+                <td><?= htmlspecialchars($data['name']) ?></td>
+            </tr>
+            <tr>
+                <td>Дата создания</td>
+                <td><?= htmlspecialchars($data['created_at']) ?></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </main>
 
 <footer class="border-top mt-5 py-3 flex-shrink-0">

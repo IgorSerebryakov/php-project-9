@@ -44,9 +44,9 @@ $app->get('/', function ($request, $response) {
     return $this->get('renderer')->render($response, 'index.phtml', $params);    
 });
 
-$app->post('/urls', function ($request, $response) use ($database) {
-    $urlParams = $request->getParsedBodyParam('url');
-    $validator = new \Valitron\Validator($urlParams);
+$app->post('/urls', function ($request, $response) use ($database, $router) {
+    $url = $request->getParsedBodyParam('url');
+    $validator = new \Valitron\Validator($url);
     $validator->rules([
         'required' => [
             ['name']
@@ -60,14 +60,23 @@ $app->post('/urls', function ($request, $response) use ($database) {
     ]);
     
     if ($validator->validate()) {
-        $database->save($urlParams['name'], date("Y-m-d H:i:s"));
-        $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
-        return $response;
+        if ($database->find($url)) {
+            $this->get('flash')->addMessage('success', 'Страница уже существует');
+        } else {
+            $database->save($url);
+            $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+        }
+        
+        $data = $database->getByName($url['name']);
+        $id = $data['id'];
+        
+        $urlForRedirect = $router->urlFor('url', ['id' => $id]);
+        return $response->withRedirect($urlForRedirect);
     } else {
         $errors = $validator->errors();
         $params = [
             'errors' => $errors['name'],
-            'name' => $urlParams['name']
+            'name' => $url['name']
         ];
     }
     
@@ -76,13 +85,23 @@ $app->post('/urls', function ($request, $response) use ($database) {
 
 $app->get('/urls/{id}', function ($request, $response, $args) use ($database, $router) {
     $id = $args['id'];
-    $dataUrl = $database->find($id);
+    $dataUrl = $database->getById($id);
+    
+    $messages = $this->get('flash')->getMessages();
+ 
     $params = [
-        'data' => $dataUrl
+        'data' => $dataUrl,
+        'flash' => $messages
     ];
     
     return $this->get('renderer')->render($response, 'show.phtml', $params);
-});
+})->setName('url');
+
+$app->get('/urls', function ($request, $response) use ($database, $router) {
+    $urls = $database->all();
+    dump($urls);
+    return $response;
+})->setName('urls');
 
 $app->run();
 
