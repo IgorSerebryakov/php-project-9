@@ -4,6 +4,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use PostgreSQL\Connection;
 use PostgreSQL\Database;
+use PostgreSQL\ChecksDatabase;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
 use DI\Container;
@@ -36,6 +37,7 @@ $app->addErrorMiddleware(true, true, true);
 $app->add(MethodOverrideMiddleware::class);
 
 $database = new Database($pdo);
+$checksDatabase = new ChecksDatabase($pdo);
 
 $app->get('/', function ($request, $response) {
     $params = [
@@ -105,6 +107,12 @@ $app->get('/urls', function ($request, $response) use ($database, $router) {
     
     return $this->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('urls');
+
+$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($checksDatabase, $router) {
+    $urlId = $args['url_id'];
+    $checksDatabase->save($urlId);
+    
+});
 
 $app->run();
 
