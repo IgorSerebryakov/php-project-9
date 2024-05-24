@@ -101,8 +101,9 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($database, $c
     return $this->get('renderer')->render($response, 'show.phtml', $params);
 })->setName('url');
 
-$app->get('/urls', function ($request, $response) use ($database, $router) {
+$app->get('/urls', function ($request, $response) use ($database, $checksDatabase, $router) {
     $urls = $database->all();
+    
     $params = [
         'urls' => $urls
     ];

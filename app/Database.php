@@ -56,7 +56,14 @@ class Database
     
     public function all()
     {
-        $sql = 'SELECT * FROM urls ORDER BY id DESC';
+        $sql = 'SELECT urls.id, name, MAX(checks.created_at) AS last_reg 
+                FROM urls
+                INNER JOIN url_checks AS checks
+                    ON 
+                        urls.id = checks.url_id
+                GROUP BY name, urls.id
+                ORDER BY urls.id DESC';
+        
         $stmt = $this->pdo->query($sql);
         
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);

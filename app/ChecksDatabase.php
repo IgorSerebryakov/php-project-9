@@ -32,4 +32,16 @@ class ChecksDatabase
         
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+    
+    public function getLastRegs()
+    {
+        $sql = 'SELECT url_id, MAX(created_at) AS last_reg 
+                FROM url_checks AS checks
+                GROUP BY url_id
+                ORDER BY url_id DESC';
+
+        $stmt = $this->pdo->query($sql);
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }
