@@ -22,4 +22,14 @@ class ChecksDatabase
             'created_at' => $created_at
         ]);
     }
+    
+    public function get($id)
+    {
+        $sql = 'SELECT id, created_at FROM url_checks WHERE url_id = :url_id';
+        $stmt = $this->pdo->prepare($sql);
+        
+        $stmt->execute([$id]);
+        
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }

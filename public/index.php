@@ -85,14 +85,16 @@ $app->post('/urls', function ($request, $response) use ($database, $router) {
     return $this->get('renderer')->render($response, 'new.phtml', $params);
 });
 
-$app->get('/urls/{id}', function ($request, $response, $args) use ($database, $router) {
+$app->get('/urls/{id}', function ($request, $response, $args) use ($database, $checksDatabase, $router) {
     $id = $args['id'];
     $dataUrl = $database->getById($id);
+    $dataCheck = $checksDatabase->get($id);
     
     $messages = $this->get('flash')->getMessages();
  
     $params = [
-        'data' => $dataUrl,
+        'checks' => $dataCheck,
+        'url' => $dataUrl,
         'flash' => $messages
     ];
     
@@ -112,6 +114,8 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
     $urlId = $args['url_id'];
     $checksDatabase->save($urlId);
     
+    $urlForRedirect = $router->urlFor('url', ['id' => $urlId]);
+    return $response->withRedirect($urlForRedirect);
 });
 
 $app->run();
