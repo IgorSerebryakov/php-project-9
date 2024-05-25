@@ -3,8 +3,7 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use PostgreSQL\Connection;
-use PostgreSQL\Database;
-use PostgreSQL\ChecksDatabase;
+use PostgreSQL\DB;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
 use DI\Container;
@@ -13,7 +12,7 @@ use GuzzleHttp\Client;
 session_start();
 
 try {
-    $pdo = Connection::get()->connect();
+    Connection::get()->connect();
 } catch (\PDOException $e) {
     echo $e->getMessage();
 }
@@ -37,9 +36,6 @@ $router = $app->getRouteCollector()->getRouteParser();
 $app->addErrorMiddleware(true, true, true);
 $app->add(MethodOverrideMiddleware::class);
 
-$database = new Database($pdo);
-$checksDatabase = new ChecksDatabase($pdo);
-
 $app->get('/', function ($request, $response) {
     $params = [
         'errors' => []
@@ -47,7 +43,7 @@ $app->get('/', function ($request, $response) {
     return $this->get('renderer')->render($response, 'new.phtml', $params);    
 });
 
-$app->post('/urls', function ($request, $response) use ($database, $router) {
+$app->post('/urls', function ($request, $response) use ($router) {
     $url = $request->getParsedBodyParam('url');
     $validator = new \Valitron\Validator($url);
     $validator->rules([
@@ -62,11 +58,14 @@ $app->post('/urls', function ($request, $response) use ($database, $router) {
         ]
     ]);
     
+    $name = $url['name'];
+    
     if ($validator->validate()) {
-        if ($database->find($url)) {
+        if (DB::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name])) {
             $this->get('flash')->addMessage('success', 'Страница уже существует');
         } else {
             $database->save($url);
+            DB::save()
             $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
         }
         
@@ -86,15 +85,17 @@ $app->post('/urls', function ($request, $response) use ($database, $router) {
     return $this->get('renderer')->render($response, 'new.phtml', $params);
 });
 
-$app->get('/urls/{id}', function ($request, $response, $args) use ($database, $checksDatabase, $router) {
-    $id = $args['id'];
-    $dataUrl = $database->getById($id);
-    $dataCheck = $checksDatabase->get($id);
+$app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
     
+    $id = $args['id'];
+    $url = DB::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$id]);
+    $check = DB::getRow('SELECT id, created_at FROM url_checks WHERE url_id = :url_id', [$id]);
+    
+    $messages = $this->get('flash')->getMessages();
     
     $params = [
-        'checks' => $dataCheck,
-        'url' => $dataUrl,
+        'checks' => $check,
+        'url' => $url,
         'flash' => $messages
     ];
     

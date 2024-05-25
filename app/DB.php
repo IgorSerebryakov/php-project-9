@@ -2,15 +2,80 @@
 
 namespace PostgreSQL;
 
-class Database
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+
+class DB extends Connection
 {
-    private $pdo;
+    private static $db;
     
-    public function __construct($pdo)
+    private static $connection = null;
+
+    public function __construct()
     {
-        $this->pdo = $pdo;
+        if (self::$connection === null) {
+            self::$db = Connection::get()->connect();    
+        }
+        
+        return self::$connection;
     }
-    public function save($url)
+    
+    private static function run($query, $args = [])
+    {
+        if (empty($args)) {
+            return self::query($query);
+        }
+        $stmt = self::prepare($query);
+        
+        $pseudoVars = Str::of($query)->matchAll('(?<=:)\w*');
+        
+        $queryParams = $pseudoVars->combine($args);
+        
+        $stmt->execute($queryParams);
+        return $stmt;
+    }
+    
+    private static function query($query)
+    {
+        return self::$db->query($query);                    
+    }
+    
+    private static function prepare($query)
+    {
+        return self::$db->prepare($query);
+    }
+    
+    public static function getRow($query, $args = [])
+    {
+        return self::run($query, $args)->fetch(\PDO::FETCH_ASSOC);
+    }
+    
+    public static function getRows($query, $args = [])
+    {
+        return self::run($query, $args)->fetchAll(\PDO::FETCH_ASSOC);
+    }
+    
+    public static function save($query, $args = [])
+    {
+        return self::run($query, $args);
+    }
+    
+}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    /*public function save($url)
     {
         $sql = 'INSERT INTO urls (name, created_at) VALUES (:name, :created_at)';
         $stmt = $this->pdo->prepare($sql);
@@ -68,4 +133,4 @@ class Database
         
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
-}
+}*/

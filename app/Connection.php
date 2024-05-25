@@ -2,7 +2,7 @@
 
 namespace PostgreSQL;
 
-final class Connection
+class Connection
 {
     private static ?Connection $conn = null;
     
