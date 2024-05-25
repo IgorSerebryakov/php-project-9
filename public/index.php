@@ -8,6 +8,7 @@ use PostgreSQL\ChecksDatabase;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
 use DI\Container;
+use GuzzleHttp\Client;
 
 session_start();
 
@@ -90,8 +91,7 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($database, $c
     $dataUrl = $database->getById($id);
     $dataCheck = $checksDatabase->get($id);
     
-    $messages = $this->get('flash')->getMessages();
- 
+    
     $params = [
         'checks' => $dataCheck,
         'url' => $dataUrl,
@@ -111,9 +111,16 @@ $app->get('/urls', function ($request, $response) use ($database, $checksDatabas
     return $this->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('urls');
 
-$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($checksDatabase, $router) {
+$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($database, $checksDatabase, $router) {
     $urlId = $args['url_id'];
     $checksDatabase->save($urlId);
+    $url = $database->getById($urlId); 
+
+    $client = new GuzzleHttp\Client();
+    $res = $client->request('GET', $url['name']);
+    $statusCode = $res->getStatusCode();
+    
+    
     
     $urlForRedirect = $router->urlFor('url', ['id' => $urlId]);
     return $response->withRedirect($urlForRedirect);
