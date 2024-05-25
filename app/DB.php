@@ -14,35 +14,38 @@ class DB extends Connection
     public function __construct()
     {
         if (self::$connection === null) {
-            self::$db = Connection::get()->connect();    
+            try {
+                self::$db = Connection::get()->connect();
+            } catch (\PDOException $e) {
+                throw new \Exception($e->getMessage());
+            }
         }
         
         return self::$connection;
     }
+
+    private static function query($query)
+    {
+        return self::$db->query($query);
+    }
+
+    public static function prepare($query)
+    {
+        return self::$db->prepare($query);
+    }
     
-    private static function run($query, $args = [])
+    public static function run($query, $args = [])
     {
         if (empty($args)) {
             return self::query($query);
         }
+        
         $stmt = self::prepare($query);
         
-        $pseudoVars = Str::of($query)->matchAll('(?<=:)\w*');
-        
-        $queryParams = $pseudoVars->combine($args);
-        
+        $pseudoVars = Str::of($query)->matchAll('/(?<=:)\w*/');
+        $queryParams = $pseudoVars->combine($args)->all();
         $stmt->execute($queryParams);
         return $stmt;
-    }
-    
-    private static function query($query)
-    {
-        return self::$db->query($query);                    
-    }
-    
-    private static function prepare($query)
-    {
-        return self::$db->prepare($query);
     }
     
     public static function getRow($query, $args = [])

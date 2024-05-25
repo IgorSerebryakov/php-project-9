@@ -11,6 +11,7 @@ use GuzzleHttp\Client;
 
 session_start();
 
+
 try {
     Connection::get()->connect();
 } catch (\PDOException $e) {
@@ -59,17 +60,18 @@ $app->post('/urls', function ($request, $response) use ($router) {
     ]);
     
     $name = $url['name'];
+    $date = date("Y-m-d H:i:s");
     
     if ($validator->validate()) {
-        if (DB::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name])) {
+        $db = new DB();
+        if ($db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name])) {
             $this->get('flash')->addMessage('success', 'Страница уже существует');
         } else {
-            $database->save($url);
-            DB::save()
+            $db::save('INSERT INTO urls (name, created_at) VALUES (:name, :created_at)', [$name, $date]);
             $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
         }
         
-        $data = $database->getByName($url['name']);
+        $data = DB::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
         $id = $data['id'];
         
         $urlForRedirect = $router->urlFor('url', ['id' => $id]);
@@ -86,10 +88,10 @@ $app->post('/urls', function ($request, $response) use ($router) {
 });
 
 $app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
-    
+    $db = new DB();
     $id = $args['id'];
-    $url = DB::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$id]);
-    $check = DB::getRow('SELECT id, created_at FROM url_checks WHERE url_id = :url_id', [$id]);
+    $url = $db::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$id]);
+    $check = $db::getRow('SELECT id, created_at FROM url_checks WHERE url_id = :url_id', [$id]);
     
     $messages = $this->get('flash')->getMessages();
     
@@ -102,8 +104,16 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
     return $this->get('renderer')->render($response, 'show.phtml', $params);
 })->setName('url');
 
-$app->get('/urls', function ($request, $response) use ($database, $checksDatabase, $router) {
-    $urls = $database->all();
+$app->get('/urls', function ($request, $response) use ($router) {
+    $db = new DB();
+    $query = 'SELECT urls.id, name, MAX(checks.created_at) AS last_reg 
+            FROM urls
+            INNER JOIN url_checks AS checks
+            ON 
+                        urls.id = checks.url_id
+                GROUP BY name, urls.id
+                ORDER BY urls.id DESC';
+    $urls = $db::getRows($query);
     
     $params = [
         'urls' => $urls
