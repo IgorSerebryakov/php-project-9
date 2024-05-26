@@ -37,6 +37,8 @@ $router = $app->getRouteCollector()->getRouteParser();
 $app->addErrorMiddleware(true, true, true);
 $app->add(MethodOverrideMiddleware::class);
 
+$db = new DB();
+
 $app->get('/', function ($request, $response) {
     $params = [
         'errors' => []
@@ -44,7 +46,7 @@ $app->get('/', function ($request, $response) {
     return $this->get('renderer')->render($response, 'new.phtml', $params);    
 });
 
-$app->post('/urls', function ($request, $response) use ($router) {
+$app->post('/urls', function ($request, $response) use ($router, $db) {
     $url = $request->getParsedBodyParam('url');
     $validator = new \Valitron\Validator($url);
     $validator->rules([
@@ -63,7 +65,6 @@ $app->post('/urls', function ($request, $response) use ($router) {
     $date = date("Y-m-d H:i:s");
     
     if ($validator->validate()) {
-        $db = new DB();
         if ($db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name])) {
             $this->get('flash')->addMessage('success', 'Страница уже существует');
         } else {
@@ -71,7 +72,7 @@ $app->post('/urls', function ($request, $response) use ($router) {
             $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
         }
         
-        $data = DB::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
+        $data = $db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
         $id = $data['id'];
         
         $urlForRedirect = $router->urlFor('url', ['id' => $id]);
@@ -87,16 +88,16 @@ $app->post('/urls', function ($request, $response) use ($router) {
     return $this->get('renderer')->render($response, 'new.phtml', $params);
 });
 
-$app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
-    $db = new DB();
+$app->get('/urls/{id}', function ($request, $response, $args) use ($router, $db) {
     $id = $args['id'];
+    
     $url = $db::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$id]);
-    $check = $db::getRow('SELECT id, created_at FROM url_checks WHERE url_id = :url_id', [$id]);
+    $checks = $db::getRows('SELECT id, created_at, status_code FROM url_checks WHERE url_id = :url_id ORDER BY id DESC', [$id]);
     
     $messages = $this->get('flash')->getMessages();
     
     $params = [
-        'checks' => $check,
+        'checks' => $checks,
         'url' => $url,
         'flash' => $messages
     ];
@@ -104,15 +105,18 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
     return $this->get('renderer')->render($response, 'show.phtml', $params);
 })->setName('url');
 
-$app->get('/urls', function ($request, $response) use ($router) {
-    $db = new DB();
-    $query = 'SELECT urls.id, name, MAX(checks.created_at) AS last_reg 
-            FROM urls
-            INNER JOIN url_checks AS checks
-            ON 
-                        urls.id = checks.url_id
-                GROUP BY name, urls.id
-                ORDER BY urls.id DESC';
+$app->get('/urls', function ($request, $response) use ($router, $db) {
+    $query = 'SELECT DISTINCT ON (urls.name)
+        urls.id,
+        urls.name,
+        checks.created_at AS last_reg,
+        checks.status_code
+    FROM urls
+    INNER JOIN url_checks AS checks
+    ON
+        urls.id = checks.url_id
+    ORDER BY urls.name, last_reg DESC';
+    
     $urls = $db::getRows($query);
     
     $params = [
@@ -122,16 +126,17 @@ $app->get('/urls', function ($request, $response) use ($router) {
     return $this->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('urls');
 
-$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($database, $checksDatabase, $router) {
+$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($db, $router) {
     $urlId = $args['url_id'];
-    $checksDatabase->save($urlId);
-    $url = $database->getById($urlId); 
+    $date = date("Y-m-d H:i:s");
+
+    $url = $db::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$urlId]);
 
     $client = new GuzzleHttp\Client();
     $res = $client->request('GET', $url['name']);
     $statusCode = $res->getStatusCode();
     
-    
+    $db::save('INSERT INTO url_checks (url_id, created_at, status_code) VALUES (:url_id, :created_at, :status_code)', [$urlId, $date, $statusCode]);
     
     $urlForRedirect = $router->urlFor('url', ['id' => $urlId]);
     return $response->withRedirect($urlForRedirect);
