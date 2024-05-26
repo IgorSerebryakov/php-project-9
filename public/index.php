@@ -8,11 +8,8 @@ use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
 use DI\Container;
 use GuzzleHttp\Client as Client;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Handler\CurlHandler;
 
 session_start();
-
 
 try {
     Connection::get()->connect();
@@ -68,10 +65,10 @@ $app->post('/urls', function ($request, $response) use ($router, $db) {
     
     if ($validator->validate()) {
         if ($db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name])) {
-            $this->get('flash')->addMessage('success', 'Страница уже существует');
+            $this->flash->addMessage('success', 'Страница уже существует');
         } else {
             $db::save('INSERT INTO urls (name, created_at) VALUES (:name, :created_at)', [$name, $date]);
-            $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+            $this->flash->addMessage('success', 'Страница успешно добавлена');
         }
         
         $data = $db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
@@ -96,7 +93,7 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($router, $db)
     $url = $db::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$id]);
     $checks = $db::getRows('SELECT id, created_at, status_code FROM url_checks WHERE url_id = :url_id ORDER BY id DESC', [$id]);
     
-    $messages = $this->get('flash')->getMessages();
+    $messages = $this->flash->getMessages();
     
     $params = [
         'checks' => $checks,
@@ -140,9 +137,9 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
     
     try {
         $res = $client->request('GET', $url['name']);
-        $this->get('flash')->addMessage('success', 'Страница успешно проверена');
+        $this->flash->addMessage('success', 'Страница успешно проверена');
     } catch (\GuzzleHttp\Exception\ConnectException $e) {
-        $this->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
+        $this->flash->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
         $urlForRedirect = $router->urlFor('url', ['id' => $urlId]);
         return $response->withRedirect($urlForRedirect);
     }
