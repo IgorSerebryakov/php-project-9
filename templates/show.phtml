@@ -36,7 +36,9 @@
     </nav>
 </header>
 
-<?php if (isset($flash['success'])): ?>
+<?php if (isset($flash['error'])): ?>
+    <div class="alert alert-danger" role="alert"><?= htmlspecialchars($flash['error'][0]); ?></div>
+<?php elseif (isset($flash['success'])): ?>
     <div class="alert alert-success" role="alert"><?= htmlspecialchars($flash['success'][0]); ?></div>
 <?php endif ?>
 

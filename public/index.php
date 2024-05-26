@@ -7,7 +7,9 @@ use PostgreSQL\DB;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
 use DI\Container;
-use GuzzleHttp\Client;
+use GuzzleHttp\Client as Client;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Handler\CurlHandler;
 
 session_start();
 
@@ -131,9 +133,20 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
     $date = date("Y-m-d H:i:s");
 
     $url = $db::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$urlId]);
-
-    $client = new GuzzleHttp\Client();
-    $res = $client->request('GET', $url['name']);
+    
+    $client = new Client([
+        'timeout' => 2.0
+    ]);
+    
+    try {
+        $res = $client->request('GET', $url['name']);
+        $this->get('flash')->addMessage('success', 'Страница успешно проверена');
+    } catch (\GuzzleHttp\Exception\ConnectException $e) {
+        $this->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
+        $urlForRedirect = $router->urlFor('url', ['id' => $urlId]);
+        return $response->withRedirect($urlForRedirect);
+    }
+    
     $statusCode = $res->getStatusCode();
     
     $db::save('INSERT INTO url_checks (url_id, created_at, status_code) VALUES (:url_id, :created_at, :status_code)', [$urlId, $date, $statusCode]);
