@@ -11,6 +11,8 @@ use GuzzleHttp\Client as Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
+use DiDom\Document;
+use DiDom\Element;
 
 session_start();
 
@@ -93,8 +95,13 @@ $app->post('/urls', function ($request, $response) use ($router, $db) {
 $app->get('/urls/{id}', function ($request, $response, $args) use ($router, $db) {
     $id = $args['id'];
     
-    $url = $db::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$id]);
-    $checks = $db::getRows('SELECT id, created_at, status_code FROM url_checks WHERE url_id = :url_id ORDER BY id DESC', [$id]);
+    $url = $db::getRow('SELECT id, name, created_at 
+                              FROM urls 
+                              WHERE id = :id', [$id]);
+    
+    $checks = $db::getRows('SELECT id, created_at, status_code, h1, title, description 
+                                  FROM url_checks 
+                                  WHERE url_id = :url_id ORDER BY id DESC', [$id]);
     
     $messages = $this->get('flash')->getMessages();
     
@@ -134,6 +141,11 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
 
     $url = $db::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$urlId]);
     
+    $document = new Document($url['name'], true);
+    $h1 = optional($document->first('h1'))->innerHtml();
+    $title = optional($document->first('title'))->innerHtml();
+    $description = optional($document->first('meta[name=description]'))->attr('content');
+    
     $client = new Client([
         'timeout' => 2.0
     ]);
@@ -149,7 +161,9 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
     
     $statusCode = $res->getStatusCode();
     
-    $db::save('INSERT INTO url_checks (url_id, created_at, status_code) VALUES (:url_id, :created_at, :status_code)', [$urlId, $date, $statusCode]);
+    $db::save('INSERT INTO url_checks (url_id, created_at, status_code, h1, title, description) 
+                     VALUES (:url_id, :created_at, :status_code, :h1, :title, :description)', 
+                     [$urlId, $date, $statusCode, $h1, $title, $description]);
     
     $urlForRedirect = $router->urlFor('url', ['id' => $urlId]);
     return $response->withRedirect($urlForRedirect);
