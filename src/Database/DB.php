@@ -15,7 +15,6 @@ class DB extends Connection
         } catch (\PDOException $e) {
             throw new \Exception($e->getMessage());
         }
-
     }
 
     private static function query($query)
