@@ -41,8 +41,6 @@ $router = $app->getRouteCollector()->getRouteParser();
 $app->addErrorMiddleware(true, true, true);
 $app->add(MethodOverrideMiddleware::class);
 
-$db = new DB();
-
 $app->get('/', function ($request, $response) {
     $params = [
         'errors' => []
@@ -50,7 +48,7 @@ $app->get('/', function ($request, $response) {
     return $this->get('renderer')->render($response, 'new.phtml', $params);    
 });
 
-$app->post('/urls', function ($request, $response) use ($router, $db) {
+$app->post('/urls', function ($request, $response) use ($router) {
     $url = $request->getParsedBodyParam('url');
     $validator = new \Valitron\Validator($url);
     $validator->rules([
@@ -69,6 +67,8 @@ $app->post('/urls', function ($request, $response) use ($router, $db) {
     $date = date("Y-m-d H:i:s");
     
     if ($validator->validate()) {
+        $db = new DB();
+        
         if ($db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name])) {
             $this->get('flash')->addMessage('success', 'Страница уже существует');
         } else {
@@ -92,8 +92,9 @@ $app->post('/urls', function ($request, $response) use ($router, $db) {
     return $this->get('renderer')->render($response, 'new.phtml', $params);
 });
 
-$app->get('/urls/{id}', function ($request, $response, $args) use ($router, $db) {
+$app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
     $id = $args['id'];
+    $db = new DB();
     
     $url = $db::getRow('SELECT id, name, created_at 
                               FROM urls 
@@ -114,7 +115,9 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($router, $db)
     return $this->get('renderer')->render($response, 'show.phtml', $params);
 })->setName('url');
 
-$app->get('/urls', function ($request, $response) use ($router, $db) {
+$app->get('/urls', function ($request, $response) use ($router) {
+    $db = new DB();
+    
     $query = 'SELECT DISTINCT ON (urls.name)
         urls.id,
         urls.name,
@@ -135,9 +138,10 @@ $app->get('/urls', function ($request, $response) use ($router, $db) {
     return $this->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('urls');
 
-$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($db, $router) {
+$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($router) {
     $urlId = $args['url_id'];
     $date = date("Y-m-d H:i:s");
+    $db = new DB();
 
     $url = $db::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$urlId]);
     
