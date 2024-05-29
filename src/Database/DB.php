@@ -1,27 +1,21 @@
 <?php
 
-namespace PostgreSQL;
+namespace App\Database;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class DB extends Connection
 {
     private static $db;
-    
-    private static $connection = null;
 
     public function __construct()
     {
-        if (self::$connection === null) {
-            try {
-                self::$db = Connection::get()->connect();
-            } catch (\PDOException $e) {
-                throw new \Exception($e->getMessage());
-            }
+        try {
+            self::$db = Connection::get()->connect();
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
         }
-        
-        return self::$connection;
+
     }
 
     private static function query($query)

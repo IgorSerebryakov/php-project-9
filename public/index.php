@@ -2,17 +2,17 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use PostgreSQL\Connection;
-use PostgreSQL\DB;
+use App\Database\Connection;
+use App\Database\DB;
+use DI\Container;
+use DiDom\Document;
+use GuzzleHttp\Client as Client;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\ServerException;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
-use DI\Container;
-use GuzzleHttp\Client as Client;
-use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\ServerException;
-use DiDom\Document;
-use DiDom\Element;
+use Valitron\Validator;
 
 session_start();
 
@@ -50,7 +50,8 @@ $app->get('/', function ($request, $response) {
 
 $app->post('/urls', function ($request, $response) use ($router) {
     $url = $request->getParsedBodyParam('url');
-    $validator = new \Valitron\Validator($url);
+    
+    $validator = new Validator($url);
     $validator->rules([
         'required' => [
             ['name']
@@ -65,31 +66,31 @@ $app->post('/urls', function ($request, $response) use ($router) {
     
     $name = $url['name'];
     $date = date("Y-m-d H:i:s");
-    
-    if ($validator->validate()) {
-        $db = new DB();
-        
-        if ($db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name])) {
-            $this->get('flash')->addMessage('success', 'Страница уже существует');
-        } else {
-            $db::save('INSERT INTO urls (name, created_at) VALUES (:name, :created_at)', [$name, $date]);
-            $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
-        }
-        
-        $data = $db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
-        $id = $data['id'];
-        
-        $urlForRedirect = $router->urlFor('url', ['id' => $id]);
-        return $response->withRedirect($urlForRedirect);
-    } else {
+
+    if (!$validator->validate()) {
         $errors = $validator->errors();
         $params = [
             'errors' => $errors['name'],
-            'name' => $url['name']
+            'name' => $name
         ];
+
+        return $this->get('renderer')->render($response, 'new.phtml', $params);
     }
     
-    return $this->get('renderer')->render($response, 'new.phtml', $params);
+    $db = new DB();
+
+    if ($db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name])) {
+        $this->get('flash')->addMessage('success', 'Страница уже существует');
+    } else {
+        $db::save('INSERT INTO urls (name, created_at) VALUES (:name, :created_at)', [$name, $date]);
+        $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+    }
+
+    $data = $db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
+    $id = $data['id'];
+    
+    return $response->withRedirect($router->urlFor('url', ['id' => $id]));
+
 });
 
 $app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
@@ -159,8 +160,7 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     } catch (ConnectException | ClientException | ServerException) {
         $this->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
-        $urlForRedirect = $router->urlFor('url', ['id' => $urlId]);
-        return $response->withRedirect($urlForRedirect);
+        return $response->withRedirect($router->urlFor('url', ['id' => $urlId]));
     }
     
     $statusCode = $res->getStatusCode();
