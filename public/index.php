@@ -80,9 +80,9 @@ $app->post('/urls', function ($request, $response) use ($router) {
     $db = new DB();
     
     $existingUrl = $db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
-    $existingId = $existingUrl['id'];
-
+    
     if ($existingUrl) {
+        $existingId = $existingUrl['id'];
         $this->get('flash')->addMessage('success', 'Страница уже существует');
         return $response->withRedirect($router->urlFor('url', ['id' => $existingId]));
     }
