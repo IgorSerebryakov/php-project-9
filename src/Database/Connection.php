@@ -8,15 +8,16 @@ class Connection
     
     public function connect()
     {
-        $params = [];
-
         if (getenv('DATABASE_URL')) {
             $dbUrl = parse_url(getenv('DATABASE_URL'));
+        }
+
+        if (isset($dbUrl['host'])) {
             $params['host'] = $dbUrl['host'];
-            $params['port'] = isset($dbUrl['port']) ?: 5432;
-            $params['database'] = ltrim($dbUrl['path'], '/');
-            $params['user'] = $dbUrl['user'];
-            $params['pass'] = $dbUrl['pass'];
+            $params['port'] = $dbUrl['port'] ?? null;
+            $params['database'] = $dbUrl['path'] ? ltrim($dbUrl['path'], '/') : null;
+            $params['user'] = $dbUrl['user'] ?? null;
+            $params['pass'] = $dbUrl['pass'] ?? null;
         } else {
             $params = parse_ini_file('database.ini');
         }
