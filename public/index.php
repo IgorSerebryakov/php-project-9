@@ -152,7 +152,7 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
     $description = optional($document->first('meta[name=description]'))->attr('content');
     
     $client = new Client([
-        'timeout' => 2.0
+        'timeout' => 3.0
     ]);
     
     try {
