@@ -35,13 +35,11 @@
         </div>
     </nav>
 </header>
-
-<?php if (isset($flash['error'])): ?>
-    <div class="alert alert-danger" role="alert"><?= htmlspecialchars($flash['error'][0]); ?></div>
-<?php elseif (isset($flash['success'])): ?>
+<?php if (isset($flash['success'])): ?>
     <div class="alert alert-success" role="alert"><?= htmlspecialchars($flash['success'][0]); ?></div>
+<?php elseif (isset($flash['error'])): ?>
+    <div class="alert alert-error" role="alert"><?= htmlspecialchars($flash['error'][0]); ?></div>
 <?php endif ?>
-
 <main class="flex-grow-1">
     <div class="container-lg mt-3">
         <h1>Сайт: <?= htmlspecialchars($url['name']); ?></h1>
