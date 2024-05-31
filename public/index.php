@@ -78,19 +78,19 @@ $app->post('/urls', function ($request, $response) use ($router) {
     }
     
     $db = new DB();
-
-    if ($db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name])) {
-        $this->get('flash')->addMessage('success', 'Страница уже существует');
-    } else {
-        $db::save('INSERT INTO urls (name, created_at) VALUES (:name, :created_at)', [$name, $date]);
-        $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
-    }
-
+    
     $data = $db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
     $id = $data['id'];
+
+    if ($data) {
+        $this->get('flash')->addMessage('success', 'Страница уже существует');
+        return $response->withRedirect($router->urlFor('url', ['id' => $id]));
+    }
+    
+    $db::save('INSERT INTO urls (name, created_at) VALUES (:name, :created_at)', [$name, $date]);
+    $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
     
     return $response->withRedirect($router->urlFor('url', ['id' => $id]));
-
 });
 
 $app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
