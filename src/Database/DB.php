@@ -35,7 +35,7 @@ class DB extends Connection
         
         $stmt = self::prepare($query);
         
-        $pseudoVars = Str::of($query)->matchAll('/(?<=:)\w*/');
+        $pseudoVars = \Illuminate\Support\Str::of($query)->matchAll('/(?<=:)\w*/');
         $queryParams = $pseudoVars->combine($args)->all();
         $stmt->execute($queryParams);
         return $stmt;
