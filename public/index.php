@@ -79,18 +79,21 @@ $app->post('/urls', function ($request, $response) use ($router) {
     
     $db = new DB();
     
-    $data = $db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
-    $id = $data['id'];
+    $existingUrl = $db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
+    $existingId = $existingUrl['id'];
 
-    if ($data) {
+    if ($existingUrl) {
         $this->get('flash')->addMessage('success', 'Страница уже существует');
-        return $response->withRedirect($router->urlFor('url', ['id' => $id]));
+        return $response->withRedirect($router->urlFor('url', ['id' => $existingId]));
     }
     
     $db::save('INSERT INTO urls (name, created_at) VALUES (:name, :created_at)', [$name, $date]);
+    
+    $id = $db::getRow('SELECT id FROM urls WHERE name = :name', [$name]);
+    $createdId = $id['id'];
     $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
     
-    return $response->withRedirect($router->urlFor('url', ['id' => $id]));
+    return $response->withRedirect($router->urlFor('url', ['id' => $createdId]));
 });
 
 $app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
@@ -104,7 +107,7 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
     $checks = $db::getRows('SELECT id, created_at, status_code, h1, title, description 
                                   FROM url_checks 
                                   WHERE url_id = :url_id ORDER BY id DESC', [$id]);
-    
+
     $messages = $this->get('flash')->getMessages();
     
     $params = [
