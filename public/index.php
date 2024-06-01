@@ -4,6 +4,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Database\Connection;
 use App\Database\DB;
+use App\Database\Urls;
+use App\Url;
 use DI\Container;
 use DiDom\Document;
 use GuzzleHttp\Client as Client;
@@ -15,14 +17,6 @@ use Slim\Middleware\MethodOverrideMiddleware;
 use Valitron\Validator;
 
 session_start();
-
-try {
-    Connection::get()->connect();
-} catch (\PDOException $e) {
-    echo $e->getMessage();
-}
-
-date_default_timezone_set("Europe/Moscow");
 
 $container = new Container();
 $container->set('renderer', function () {
@@ -41,6 +35,8 @@ $router = $app->getRouteCollector()->getRouteParser();
 $app->addErrorMiddleware(true, true, true);
 $app->add(MethodOverrideMiddleware::class);
 
+$urls = new Urls();
+
 $app->get('/', function ($request, $response) {
     $params = [
         'errors' => []
@@ -48,52 +44,28 @@ $app->get('/', function ($request, $response) {
     return $this->get('renderer')->render($response, 'new.phtml', $params);    
 });
 
-$app->post('/urls', function ($request, $response) use ($router) {
-    $url = $request->getParsedBodyParam('url');
-    
-    $validator = new Validator($url);
-    $validator->rules([
-        'required' => [
-            ['name']
-        ],
-        'lengthMax' => [
-            ['name', 255]
-        ],
-        'url' => [
-            ['name']
-        ]
-    ]);
-    
-    $name = $url['name'];
-    $date = date("Y-m-d H:i:s");
+$app->post('/urls', function ($request, $response) use ($router, $urls) {
+    $url = new Url($request->getParsedBodyParam('url'));
 
-    if (!$validator->validate()) {
-        $errors = $validator->errors();
+    if (!$url->isValid()) {
+        $errors = $url->getErrors();
         $params = [
-            'errors' => $errors['name'],
-            'name' => $name
+            'errors' => $errors,
+            'name' => $url->getName()
         ];
 
         return $this->get('renderer')->render($response, 'new.phtml', $params);
     }
     
-    $db = new DB();
+    $urls->save($url);
     
-    $existingUrl = $db::getRow('SELECT id, name, created_at FROM urls WHERE name = :name', [$name]);
-    
-    if ($existingUrl) {
-        $existingId = $existingUrl['id'];
+    if ($url->isNew()) {
+        $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+    } else {
         $this->get('flash')->addMessage('success', 'Страница уже существует');
-        return $response->withRedirect($router->urlFor('url', ['id' => $existingId]));
     }
     
-    $db::save('INSERT INTO urls (name, created_at) VALUES (:name, :created_at)', [$name, $date]);
-    
-    $id = $db::getRow('SELECT id FROM urls WHERE name = :name', [$name]);
-    $createdId = $id['id'];
-    $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
-    
-    return $response->withRedirect($router->urlFor('url', ['id' => $createdId]));
+    return $response->withRedirect($router->urlFor('url', ['id' => $url->getId()]));
 });
 
 $app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
@@ -155,7 +127,7 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
     $description = optional($document->first('meta[name=description]'))->attr('content');
     
     $client = new Client([
-        'timeout' => 3.0
+        'timeout' => 2.0
     ]);
     
     try {
