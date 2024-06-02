@@ -6,14 +6,6 @@ use App\Url;
 
 class Urls extends DB
 {
-    public function getRowByName($name)
-    {
-        $stmt = $this->pdo->prepare('SELECT id, name, created_at FROM urls WHERE name = :name');
-        $stmt->execute([$name]);
-        
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
-    
     public function getUrlById($id)
     {
         $stmt = $this->pdo->prepare('SELECT id, name, created_at FROM urls WHERE id = :id');
@@ -29,7 +21,7 @@ class Urls extends DB
         $stmt->execute([$url->getName()]);
         $possibleUrl = $stmt->fetch(\PDO::FETCH_ASSOC);
         
-        if ($possibleUrl === null) {
+        if ($possibleUrl === false) {
             $stmt = $this->pdo->prepare('INSERT INTO urls (name, created_at) VALUES (:name, :created_at)');
             $stmt->execute([$url->getName(), $url->getCreatedAt()]);
             

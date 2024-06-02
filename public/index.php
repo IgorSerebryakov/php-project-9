@@ -2,9 +2,9 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Database\Connection;
 use App\Database\DB;
 use App\Database\Urls;
+use App\Database\UrlChecks;
 use App\Url;
 use DI\Container;
 use DiDom\Document;
@@ -14,7 +14,6 @@ use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ServerException;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
-use Valitron\Validator;
 
 session_start();
 
@@ -36,6 +35,7 @@ $app->addErrorMiddleware(true, true, true);
 $app->add(MethodOverrideMiddleware::class);
 
 $urls = new Urls();
+$urlChecks = new UrlChecks();
 
 $app->get('/', function ($request, $response) {
     $params = [
@@ -68,17 +68,10 @@ $app->post('/urls', function ($request, $response) use ($router, $urls) {
     return $response->withRedirect($router->urlFor('url', ['id' => $url->getId()]));
 });
 
-$app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
-    $id = $args['id'];
-    $db = new DB();
+$app->get('/urls/{id}', function ($request, $response, $args) use ($router, $urls, $urlChecks) {
+    $url = $urls->getUrlById($args['id']);
     
-    $url = $db::getRow('SELECT id, name, created_at 
-                              FROM urls 
-                              WHERE id = :id', [$id]);
-    
-    $checks = $db::getRows('SELECT id, created_at, status_code, h1, title, description 
-                                  FROM url_checks 
-                                  WHERE url_id = :url_id ORDER BY id DESC', [$id]);
+    $checks = $urlChecks->getChecksById($args['id']);
 
     $messages = $this->get('flash')->getMessages();
     
@@ -91,21 +84,8 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($router) {
     return $this->get('renderer')->render($response, 'show.phtml', $params);
 })->setName('url');
 
-$app->get('/urls', function ($request, $response) use ($router) {
-    $db = new DB();
-    
-    $query = 'SELECT DISTINCT ON (urls.name)
-        urls.id,
-        urls.name,
-        checks.created_at AS last_reg,
-        checks.status_code
-    FROM urls
-    INNER JOIN url_checks AS checks
-    ON
-        urls.id = checks.url_id
-    ORDER BY urls.name, last_reg DESC';
-    
-    $urls = $db::getRows($query);
+$app->get('/urls', function ($request, $response) use ($router, $urls) {
+    $urls = $urls->getAll();
     
     $params = [
         'urls' => $urls
@@ -114,28 +94,29 @@ $app->get('/urls', function ($request, $response) use ($router) {
     return $this->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('urls');
 
-$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($router) {
-    $urlId = $args['url_id'];
+$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($router, $urls) {
     $date = date("Y-m-d H:i:s");
-    $db = new DB();
 
-    $url = $db::getRow('SELECT id, name, created_at FROM urls WHERE id = :id', [$urlId]);
+    $url = new Url($urls->getUrlById($args['url_id']));
     
-    $document = new Document($url['name'], true);
-    $h1 = optional($document->first('h1'))->innerHtml();
+    $htmlParser = new Parser($url);
+    
+    
+    
+    $document = new Document($url->getName(), true);
+    $h1 = optional($document->first('h1'));
     $title = optional($document->first('title'))->innerHtml();
     $description = optional($document->first('meta[name=description]'))->attr('content');
     
     $client = new Client([
         'timeout' => 2.0
     ]);
-    
     try {
-        $res = $client->request('GET', $url['name']);
+        $res = $client->request('GET', $url->getName());
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     } catch (ConnectException | ClientException | ServerException) {
         $this->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
-        return $response->withRedirect($router->urlFor('url', ['id' => $urlId]));
+        return $response->withRedirect($router->urlFor('url', ['id' => $args['url_id']]));
     }
     
     $statusCode = $res->getStatusCode();
@@ -144,8 +125,7 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
                      VALUES (:url_id, :created_at, :status_code, :h1, :title, :description)', 
                      [$urlId, $date, $statusCode, $h1, $title, $description]);
     
-    $urlForRedirect = $router->urlFor('url', ['id' => $urlId]);
-    return $response->withRedirect($urlForRedirect);
+    return $response->withRedirect($router->urlFor('url', ['id' => $urlId]));
 });
 
 $app->run();
