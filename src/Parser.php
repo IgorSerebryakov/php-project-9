@@ -8,6 +8,7 @@ use Illuminate\Support;
 class Parser
 {
     private Document $document;
+    
     public function __construct(Url $url)
     {
         $this->document = new Document($url->getName(), true);

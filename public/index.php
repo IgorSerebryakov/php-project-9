@@ -5,6 +5,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use App\Database\DB;
 use App\Database\Urls;
 use App\Database\UrlChecks;
+use App\Check;
 use App\Url;
 use DI\Container;
 use DiDom\Document;
@@ -95,18 +96,8 @@ $app->get('/urls', function ($request, $response) use ($router, $urls) {
 })->setName('urls');
 
 $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($router, $urls) {
-    $date = date("Y-m-d H:i:s");
-
     $url = new Url($urls->getUrlById($args['url_id']));
-    
-    $htmlParser = new Parser($url);
-    
-    
-    
-    $document = new Document($url->getName(), true);
-    $h1 = optional($document->first('h1'));
-    $title = optional($document->first('title'))->innerHtml();
-    $description = optional($document->first('meta[name=description]'))->attr('content');
+    $check = new Check($url);
     
     $client = new Client([
         'timeout' => 2.0
@@ -119,7 +110,7 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
         return $response->withRedirect($router->urlFor('url', ['id' => $args['url_id']]));
     }
     
-    $statusCode = $res->getStatusCode();
+    $check->setStatusCode($res->getStatusCode());
     
     $db::save('INSERT INTO url_checks (url_id, created_at, status_code, h1, title, description) 
                      VALUES (:url_id, :created_at, :status_code, :h1, :title, :description)', 

@@ -21,6 +21,11 @@ class Check extends Parser
         $this->title = $this->getTitle();
         $this->description = $this->getDescription();
     }
+    
+    public function setStatusCode($statusCode)
+    {
+        $this->statusCode = $statusCode;
+    }
 
     public function getCreatedAt()
     {
