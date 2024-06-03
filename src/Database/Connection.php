@@ -12,7 +12,7 @@ class Connection
             $dbUrl = parse_url(getenv('DATABASE_URL'));
         }
 
-        if (isset($dbUrl)) {
+        if (isset($dbUrl['host'])) {
             $params['host'] = $dbUrl['host'];
             $params['port'] = $dbUrl['port'] ?? null;
             $params['database'] = $dbUrl['path'] ? ltrim($dbUrl['path'], '/') : null;
