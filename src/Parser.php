@@ -3,6 +3,7 @@
 namespace App;
 
 use DiDom\Document;
+use function optional;
 
 class Parser
 {
