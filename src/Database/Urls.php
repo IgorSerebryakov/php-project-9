@@ -40,12 +40,13 @@ class Urls extends DB
             checks.created_at AS last_reg,
             checks.status_code
             FROM urls
-        INNER JOIN url_checks AS checks
+        LEFT JOIN url_checks AS checks
             ON
                 urls.id = checks.url_id
                 ORDER BY urls.name, last_reg DESC';
         
         $stmt = $this->pdo->prepare($query);
+        $stmt->execute();
         
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }

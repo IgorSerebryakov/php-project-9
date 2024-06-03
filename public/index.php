@@ -2,13 +2,11 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Database\DB;
 use App\Database\Urls;
 use App\Database\UrlChecks;
-use App\Check;
+use App\Parser;
 use App\Url;
 use DI\Container;
-use DiDom\Document;
 use GuzzleHttp\Client as Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
@@ -95,9 +93,8 @@ $app->get('/urls', function ($request, $response) use ($router, $urls) {
     return $this->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('urls');
 
-$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($router, $urls) {
+$app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($router, $urls, $urlChecks) {
     $url = new Url($urls->getUrlById($args['url_id']));
-    $check = new Check($url);
     
     $client = new Client([
         'timeout' => 2.0
@@ -106,17 +103,18 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
         $res = $client->request('GET', $url->getName());
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     } catch (ConnectException | ClientException | ServerException) {
-        $this->get('flash')->addMessage('error', 'Произошла ошибка при проверке, не удалось подключиться');
+        $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');
         return $response->withRedirect($router->urlFor('url', ['id' => $args['url_id']]));
     }
-    
+
+    $parser = new Parser($url);
+    $check = $parser->getHtmlParams();
     $check->setStatusCode($res->getStatusCode());
+    $check->setUrlId($args['url_id']);
     
-    $db::save('INSERT INTO url_checks (url_id, created_at, status_code, h1, title, description) 
-                     VALUES (:url_id, :created_at, :status_code, :h1, :title, :description)', 
-                     [$urlId, $date, $statusCode, $h1, $title, $description]);
+    $urlChecks->save($check);
     
-    return $response->withRedirect($router->urlFor('url', ['id' => $urlId]));
+    return $response->withRedirect($router->urlFor('url', ['id' => $args['url_id']]));
 });
 
 $app->run();

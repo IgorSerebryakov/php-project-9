@@ -3,7 +3,6 @@
 namespace App;
 
 use DiDom\Document;
-use Illuminate\Support;
 
 class Parser
 {
@@ -14,18 +13,26 @@ class Parser
         $this->document = new Document($url->getName(), true);
     }
     
-    public function getH1()
+    public function getHtmlParams()
     {
-        return optional($this->document->first('h1')->innerHtml());
+        $h1 = $this->getTag('h1');
+        $title = $this->getTag('title');
+        $metaName = $this->getTag('meta[name=description]');
+        
+        $h1 = ($h1 != null) ? $h1->innerHtml() : null;
+        $title = ($h1 != null) ? $title->innerHtml() : null;
+        $description = ($metaName != null) ? $metaName->attr('content') : null;
+        
+        return new Check(
+            ['h1' => $h1,
+             'title' => $title,
+             'description' => $description   
+            ]
+        );
     }
     
-    public function getTitle()
+    private function getTag($tagSearch)
     {
-        return optional($this->document->first('title')->innerHtml());
-    }
-    
-    public function getDescription()
-    {
-        return optional($this->document->first('meta[name=description]'))->attr('content');
+        return optional($this->document)->first($tagSearch);
     }
 }
