@@ -11,8 +11,11 @@ class Connection
         if (getenv('DATABASE_URL')) {
             $dbUrl = parse_url(getenv('DATABASE_URL'));
         }
+        
+        dump($dbUrl);
 
         if (isset($dbUrl['host'])) {
+            $params['scheme'] = $dbUrl['scheme'];
             $params['host'] = $dbUrl['host'];
             $params['port'] = $dbUrl['port'] ?? null;
             $params['database'] = $dbUrl['path'] ? ltrim($dbUrl['path'], '/') : null;
@@ -27,7 +30,8 @@ class Connection
         }
         
         $conStr = sprintf(
-            "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
+            "%s:host=%s;port=%s;dbname=%s;user=%s;password=%s",
+            $params['scheme'],
             $params['host'],
             $params['port'],
             $params['database'],
