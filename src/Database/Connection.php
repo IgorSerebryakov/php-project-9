@@ -11,8 +11,6 @@ class Connection
         if (getenv('DATABASE_URL')) {
             $dbUrl = parse_url(getenv('DATABASE_URL'));
         }
-        
-        dump($dbUrl);
 
         if (isset($dbUrl['host'])) {
             $params['scheme'] = $dbUrl['scheme'];
