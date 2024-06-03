@@ -13,9 +13,8 @@ class Connection
         }
 
         if (isset($dbUrl['host'])) {
-            $params['scheme'] = $dbUrl['scheme'];
             $params['host'] = $dbUrl['host'];
-            $params['port'] = $dbUrl['port'] ?? null;
+            $params['port'] = $dbUrl['port'] ?? 5432;
             $params['database'] = $dbUrl['path'] ? ltrim($dbUrl['path'], '/') : null;
             $params['user'] = $dbUrl['user'] ?? null;
             $params['pass'] = $dbUrl['pass'] ?? null;
@@ -28,8 +27,7 @@ class Connection
         }
         
         $conStr = sprintf(
-            "%s:host=%s;port=%s;dbname=%s;user=%s;password=%s",
-            $params['scheme'],
+            "pgsql:host=%s;port=%s;dbname=%s;user=%s;password=%s",
             $params['host'],
             $params['port'],
             $params['database'],
