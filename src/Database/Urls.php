@@ -6,7 +6,7 @@ use App\Url;
 
 class Urls extends DB
 {
-    public function getUrlById($id)
+    public function getUrlById(int $id)
     {
         $stmt = $this->pdo->prepare('SELECT id, name, created_at FROM urls WHERE id = :id');
         $stmt->execute([$id]);
@@ -25,7 +25,8 @@ class Urls extends DB
             $stmt = $this->pdo->prepare('INSERT INTO urls (name, created_at) VALUES (:name, :created_at)');
             $stmt->execute([$url->getName(), $url->getCreatedAt()]);
 
-            $url->setId($this->pdo->lastInsertId());
+            $lastInsertId = $this->pdo->lastInsertId();
+            $url->setId(intval($lastInsertId));
             $url->setNew();
         } else {
             $url->setId($possibleUrl['id']);

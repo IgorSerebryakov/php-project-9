@@ -11,7 +11,7 @@ class Url
     private int $id;
 
     private bool $isNew = false;
-    private array $errors;
+    private mixed $errors;
 
     public function __construct(mixed $params)
     {
