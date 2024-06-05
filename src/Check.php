@@ -6,25 +6,25 @@ use Carbon\Carbon;
 
 class Check
 {
-    private $urlId;
-    private $h1;
-    private $statusCode;
-    private $title;
-    private $description;
+    private int $urlId;
+    private string $h1;
+    private string $statusCode;
+    private string $title;
+    private string $description;
 
-    public function __construct($params)
+    public function __construct(array $params)
     {
         $this->h1 = $params['h1'];
         $this->title = $params['title'];
         $this->description = $params['description'];
     }
 
-    public function setStatusCode($statusCode)
+    public function setStatusCode(string $statusCode)
     {
         $this->statusCode = $statusCode;
     }
 
-    public function setUrlId($id)
+    public function setUrlId(string $id)
     {
         $this->urlId = $id;
     }

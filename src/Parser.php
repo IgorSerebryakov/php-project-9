@@ -33,7 +33,7 @@ class Parser
         );
     }
 
-    private function getTag($tagSearch)
+    private function getTag(string $tagSearch)
     {
         return optional($this->document)->first($tagSearch);
     }

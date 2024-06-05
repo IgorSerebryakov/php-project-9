@@ -71,7 +71,7 @@ $app->post('/urls', function ($request, $response) use ($router, $urls) {
     return $response->withRedirect($router->urlFor('url', ['id' => $url->getId()]));
 });
 
-$app->get('/urls/{id}', function ($request, $response, $args) use ($router, $urls, $urlChecks) {
+$app->get('/urls/{id}', function ($request, $response, $args) use ($urls, $urlChecks) {
     $url = $urls->getUrlById($args['id']);
 
     $checks = $urlChecks->getChecksById($args['id']);
@@ -87,7 +87,7 @@ $app->get('/urls/{id}', function ($request, $response, $args) use ($router, $url
     return $this->get('renderer')->render($response, 'show.phtml', $params);
 })->setName('url');
 
-$app->get('/urls', function ($request, $response) use ($router, $urls) {
+$app->get('/urls', function ($request, $response) use ($urls) {
     $urls = $urls->getAll();
 
     $params = [

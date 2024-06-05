@@ -8,10 +8,10 @@ use Valitron\Validator;
 class Url
 {
     private mixed $params;
-    private $id;
+    private int $id;
 
     private bool $isNew = false;
-    private $errors;
+    private array $errors;
 
     public function __construct(mixed $params)
     {
@@ -55,7 +55,7 @@ class Url
         return $this->id;
     }
 
-    public function setId($id)
+    public function setId(int $id)
     {
         $this->id = $id;
     }

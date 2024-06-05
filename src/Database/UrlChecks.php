@@ -6,7 +6,7 @@ use App\Check;
 
 class UrlChecks extends DB
 {
-    public function getChecksById($id)
+    public function getChecksById(int $id)
     {
         $checkParams = [
             'id',
