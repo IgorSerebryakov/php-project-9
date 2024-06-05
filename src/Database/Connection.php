@@ -9,7 +9,6 @@ class Connection
     public function connect()
     {
         $databaseUrl = parse_url($_ENV['DATABASE_URL']);
-        dump($_ENV);
         $user = $databaseUrl['user'];
         $pass = $databaseUrl['pass'];
         $host = $databaseUrl['host'];
