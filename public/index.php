@@ -57,7 +57,7 @@ $app->post('/urls', function ($request, $response) use ($router, $urls) {
             'name' => $url->getName()
         ];
 
-        return $this->get('renderer')->render($response, 'new.phtml', $params);
+        return $this->get('renderer')->render($response->withStatus(422), 'new.phtml', $params);
     }
     
     $urls->save($url);
