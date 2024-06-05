@@ -4,6 +4,7 @@ namespace App\Database;
 
 class Connection
 {
+    protected $connection = null;
     protected function connect()
     {
         $databaseUrl = parse_url($_ENV['DATABASE_URL']);
@@ -18,7 +19,13 @@ class Connection
 
         $pdo = new \PDO($conStr);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
+        
+        $this->connection = $pdo;
         return $pdo;
+    }
+    
+    protected function getConnection()
+    {
+        return $this->connection;
     }
 }
