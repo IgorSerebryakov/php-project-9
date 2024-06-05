@@ -11,7 +11,7 @@ class Connection
         if (getenv('DATABASE_URL')) {
             $dbUrl = parse_url(getenv('DATABASE_URL'));
         }
-
+        
         if (isset($dbUrl['host'])) {
             $params['host'] = $dbUrl['host'];
             $params['port'] = $dbUrl['port'] ?? 5432;
