@@ -8,36 +8,19 @@ class Connection
     
     public function connect()
     {
-        if (getenv('DATABASE_URL')) {
-            $dbUrl = parse_url(getenv('DATABASE_URL'));
-        }
+        $databaseUrl = parse_url($_ENV['DATABASE_URL']);
+        $user = $databaseUrl['user'];
+        $pass = $databaseUrl['pass'];
+        $host = $databaseUrl['host'];
+        $port = $databaseUrl['port'];
+        $dbName = ltrim($databaseUrl['path'], '/');
+        $scheme = 'pgsql';
         
-        if (isset($dbUrl['host'])) {
-            $params['host'] = $dbUrl['host'];
-            $params['port'] = $dbUrl['port'] ?? 5432;
-            $params['database'] = $dbUrl['path'] ? ltrim($dbUrl['path'], '/') : null;
-            $params['user'] = $dbUrl['user'] ?? null;
-            $params['pass'] = $dbUrl['pass'] ?? null;
-        } else {
-            $params = parse_ini_file('database.ini');
-        }
-        
-        if ($params === false) {
-            throw new \Exception("Error reading database configuration file");
-        }
-        
-        $conStr = sprintf(
-            "pgsql:host=%s;port=%s;dbname=%s;user=%s;password=%s",
-            $params['host'],
-            $params['port'],
-            $params['database'],
-            $params['user'],
-            $params['pass']
-        );
+        $conStr = "{$scheme}:host={$host};port={$port};dbname={$dbName};user={$user};password=$pass";
 
         $pdo = new \PDO($conStr);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        
+
         return $pdo;
     }
     
