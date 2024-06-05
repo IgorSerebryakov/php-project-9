@@ -6,7 +6,7 @@ class Connection
 {
     private static ?Connection $conn = null;
 
-    protected function connect()
+    public function connect()
     {
         $databaseUrl = parse_url($_ENV['DATABASE_URL']);
         $user = $databaseUrl['user'];
@@ -24,7 +24,7 @@ class Connection
         return $pdo;
     }
 
-    protected static function get()
+    final public static function get()
     {
         if (null === static::$conn) {
             static::$conn = new self();
