@@ -4,9 +4,7 @@ namespace App\Database;
 
 class Connection
 {
-    private static ?Connection $conn = null;
-
-    public function connect()
+    protected function connect()
     {
         $databaseUrl = parse_url($_ENV['DATABASE_URL']);
         $user = $databaseUrl['user'];
@@ -22,14 +20,5 @@ class Connection
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         return $pdo;
-    }
-
-    final public static function get()
-    {
-        if (null === static::$conn) {
-            static::$conn = new self();
-        }
-
-        return static::$conn;
     }
 }

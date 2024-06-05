@@ -11,7 +11,7 @@ class DB extends Connection
     public function __construct()
     {
         try {
-            $this->pdo = Connection::get()->connect();
+            $this->pdo = $this->connect();
         } catch (\PDOException $e) {
             throw new \Exception($e->getMessage());
         }
