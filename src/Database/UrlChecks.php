@@ -17,15 +17,15 @@ class UrlChecks extends DB
             'description'
         ];
         $columnNames = implode(', ', $checkParams);
-        
+
         $query = "SELECT {$columnNames} FROM url_checks WHERE url_id = :url_id ORDER BY id DESC";
-        
+
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([$id]);
-        
+
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
-    
+
     public function save(Check $check)
     {
         $checkParams = [
@@ -36,13 +36,13 @@ class UrlChecks extends DB
             'title',
             'description'
         ];
-        
+
         $columnNames = implode(', ', $checkParams);
         $pseudoVars = implode(', ', array_map(fn($var) => ":{$var}", $checkParams));
-        
+
         $query = "INSERT INTO url_checks ({$columnNames}) VALUES ({$pseudoVars})";
         $stmt = $this->pdo->prepare($query);
-        
+
         $stmt->execute([
             'url_id' => $check->getUrlId(),
             'created_at' => $check->getCreatedAt(),

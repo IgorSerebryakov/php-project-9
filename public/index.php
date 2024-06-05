@@ -44,7 +44,7 @@ $app->get('/', function ($request, $response) {
     $params = [
         'errors' => []
     ];
-    return $this->get('renderer')->render($response, 'new.phtml', $params);    
+    return $this->get('renderer')->render($response, 'new.phtml', $params);
 });
 
 $app->post('/urls', function ($request, $response) use ($router, $urls) {
@@ -59,50 +59,52 @@ $app->post('/urls', function ($request, $response) use ($router, $urls) {
 
         return $this->get('renderer')->render($response->withStatus(422), 'new.phtml', $params);
     }
-    
+
     $urls->save($url);
-    
+
     if ($url->isNew()) {
         $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
     } else {
         $this->get('flash')->addMessage('success', 'Страница уже существует');
     }
-    
+
     return $response->withRedirect($router->urlFor('url', ['id' => $url->getId()]));
 });
 
 $app->get('/urls/{id}', function ($request, $response, $args) use ($router, $urls, $urlChecks) {
     $url = $urls->getUrlById($args['id']);
-    
+
     $checks = $urlChecks->getChecksById($args['id']);
 
     $messages = $this->get('flash')->getMessages();
-    
+
     $params = [
         'checks' => $checks,
         'url' => $url,
         'flash' => $messages
     ];
-    
+
     return $this->get('renderer')->render($response, 'show.phtml', $params);
 })->setName('url');
 
 $app->get('/urls', function ($request, $response) use ($router, $urls) {
     $urls = $urls->getAll();
-    
+
     $params = [
         'urls' => $urls
     ];
-    
+
     return $this->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('urls');
 
 $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($router, $urls, $urlChecks) {
     $url = new Url($urls->getUrlById($args['url_id']));
-    
-    $client = new Client([
-        'timeout' => 2.0
-    ]);
+
+    $client = new Client(
+        [
+            'timeout' => 2.0
+        ]
+    );
     try {
         $res = $client->request('GET', $url->getName());
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
@@ -115,18 +117,10 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
     $check = $parser->getHtmlParams();
     $check->setStatusCode($res->getStatusCode());
     $check->setUrlId($args['url_id']);
-    
+
     $urlChecks->save($check);
-    
+
     return $response->withRedirect($router->urlFor('url', ['id' => $args['url_id']]));
 });
 
 $app->run();
-
-
-
-
-
-
-
-

@@ -5,7 +5,7 @@ namespace App\Database;
 class Connection
 {
     private static ?Connection $conn = null;
-    
+
     public function connect()
     {
         $databaseUrl = parse_url($_ENV['DATABASE_URL']);
@@ -15,7 +15,7 @@ class Connection
         $port = $databaseUrl['port'];
         $dbName = ltrim($databaseUrl['path'], '/');
         $scheme = 'pgsql';
-        
+
         $conStr = "{$scheme}:host={$host};port={$port};dbname={$dbName};user={$user};password=$pass";
 
         $pdo = new \PDO($conStr);
@@ -23,13 +23,13 @@ class Connection
 
         return $pdo;
     }
-    
+
     public static function get()
     {
         if (null === static::$conn) {
             static::$conn = new self();
         }
-        
+
         return static::$conn;
     }
 }
