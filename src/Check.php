@@ -24,7 +24,7 @@ class Check
         $this->statusCode = $statusCode;
     }
 
-    public function setUrlId(string $id)
+    public function setUrlId(int $id)
     {
         $this->urlId = $id;
     }
