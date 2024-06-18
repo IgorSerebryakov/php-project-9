@@ -114,7 +114,7 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
         $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');
         return $response->withRedirect($router->urlFor('url', ['id' => $args['url_id']]));
     }
-    
+
     $parser = new Parser($clientResponse);
     $check = $parser->getHtmlParams();
     $check->setStatusCode($clientResponse->getStatusCode());
