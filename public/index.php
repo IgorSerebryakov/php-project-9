@@ -10,7 +10,6 @@ use DI\Container;
 use GuzzleHttp\Client as Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Exception\ServerException;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
 use Dotenv\Dotenv;

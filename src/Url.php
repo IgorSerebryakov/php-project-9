@@ -72,6 +72,6 @@ class Url
 
     public function getCreatedAt()
     {
-        return Carbon::now();
+        return Carbon::now('Europe/Moscow');
     }
 }
