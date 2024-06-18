@@ -15,5 +15,3 @@ jobs:
         run: make install
       - name: Run linter
         run: make lint
-      - name: Drop tables
-        run: make drop
