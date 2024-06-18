@@ -36,7 +36,7 @@ $app->add(MethodOverrideMiddleware::class);
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->safeLoad();
-dump($dotenv);
+dump($dotenv->safeLoad());
 
 $urls = new Urls();
 $urlChecks = new UrlChecks();
