@@ -3,16 +3,21 @@
 namespace App;
 
 use DiDom\Document;
+use Psr\Http\Message\ResponseInterface;
 
 use function optional;
 
 class Parser
 {
     private Document $document;
+    private ResponseInterface $response;
 
-    public function __construct(Url $url)
+    public function __construct(ResponseInterface $response)
     {
-        $this->document = new Document($url->getName(), true);
+        $this->response = $response;
+        $html = $response->getBody()->__toString();
+        $this->document = new Document();
+        $this->document->loadHtml($html);
     }
 
     public function getHtmlParams()

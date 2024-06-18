@@ -36,6 +36,7 @@ $app->add(MethodOverrideMiddleware::class);
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->safeLoad();
+dump($dotenv);
 
 $urls = new Urls();
 $urlChecks = new UrlChecks();
@@ -106,16 +107,19 @@ $app->post('/urls/{url_id}/checks', function ($request, $response, $args) use ($
         ]
     );
     try {
-        $res = $client->request('GET', $url->getName());
+        $clientResponse = $client->request('GET', $url->getName());
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
-    } catch (ConnectException | ClientException | ServerException) {
+    } catch (ClientException $e) {
+        $clientResponse = $e->getResponse();
+        $this->get('flash')->addMessage('warning', 'Сервер ответил с ошибкой, но проверка была успешно выполнена');
+    } catch (ConnectException) {
         $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');
         return $response->withRedirect($router->urlFor('url', ['id' => $args['url_id']]));
     }
-
-    $parser = new Parser($url);
+    
+    $parser = new Parser($clientResponse);
     $check = $parser->getHtmlParams();
-    $check->setStatusCode($res->getStatusCode());
+    $check->setStatusCode($clientResponse->getStatusCode());
     $check->setUrlId($args['url_id']);
 
     $urlChecks->save($check);

@@ -13,3 +13,6 @@ test-coverage:
 	
 test-coverage-text:
 	XDEBUG_MODE=coverage composer exec --verbose phpunit tests -- --coverage-text
+
+drop:
+	psql -a -d $DATABASE_URL -f database.sql

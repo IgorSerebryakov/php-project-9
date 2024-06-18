@@ -4,7 +4,5 @@
 ### Maintainability Badge
 [![Maintainability](https://api.codeclimate.com/v1/badges/ccab8f33350f872f827a/maintainability)](https://codeclimate.com/github/IgorSerebryakov/php-project-9/maintainability)
 
-### Test Coverage Badge
-[![Test Coverage](https://api.codeclimate.com/v1/badges/ccab8f33350f872f827a/test_coverage)](https://codeclimate.com/github/IgorSerebryakov/php-project-9/test_coverage)
-
+Demo (works until 08.2024): 
 https://panalyzer.onrender.com

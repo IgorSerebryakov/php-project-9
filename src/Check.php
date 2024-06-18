@@ -14,9 +14,9 @@ class Check
 
     public function __construct(array $params)
     {
-        $this->h1 = $params['h1'];
-        $this->title = $params['title'];
-        $this->description = $params['description'];
+        $this->h1 = $params['h1'] ?? '';
+        $this->title = $params['title'] ?? '';
+        $this->description = $params['description'] ?? '';
     }
 
     public function setStatusCode(string $statusCode)
