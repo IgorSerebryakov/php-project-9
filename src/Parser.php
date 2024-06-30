@@ -10,11 +10,9 @@ use function optional;
 class Parser
 {
     private Document $document;
-    private ResponseInterface $response;
 
     public function __construct(ResponseInterface $response)
     {
-        $this->response = $response;
         $html = $response->getBody()->__toString();
         $this->document = new Document();
         $this->document->loadHtml($html);
